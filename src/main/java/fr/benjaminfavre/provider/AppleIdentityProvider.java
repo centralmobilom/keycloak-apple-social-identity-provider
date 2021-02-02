@@ -30,12 +30,15 @@ import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
+import java.util.Date;
 
 public class AppleIdentityProvider extends OIDCIdentityProvider implements SocialIdentityProvider<OIDCIdentityProviderConfig> {
     private String userJson;
-
+    private java.util.Date sessionDate;
     public AppleIdentityProvider(KeycloakSession session, AppleIdentityProviderConfig config) {
         super(session, config);
+        sessionDate = new Date();
+        logger.debugf("AppleIdentityProvider: %s, Initialized provider", sessionDate);
         config.setAuthorizationUrl("https://appleid.apple.com/auth/authorize?response_mode=form_post");
         config.setTokenUrl("https://appleid.apple.com/auth/token");
     }
@@ -48,15 +51,17 @@ public class AppleIdentityProvider extends OIDCIdentityProvider implements Socia
     @Override
     public BrokeredIdentityContext getFederatedIdentity(String response) {
         BrokeredIdentityContext context = super.getFederatedIdentity(response);
+        logger.debugf("AppleIdentityProvider: %s, Trying to decode user from response: %s", sessionDate, response);
 
         if (userJson != null) {
             try {
                 User user = JsonSerialization.readValue(userJson, User.class);
+                logger.debugf("AppleIdentityProvider: %s, Decoded user: email: %s, name: %s, %s", sessionDate, user.email, user.name.firstName, user.name.lastName);
                 context.setEmail(user.email);
                 context.setFirstName(user.name.firstName);
                 context.setLastName(user.name.lastName);
             } catch (IOException e) {
-                logger.errorf("Failed to parse userJson [%s]: %s", userJson, e);
+                logger.errorf("AppleIdentityProvider: Failed to parse userJson [%s]: %s", userJson, e);
             }
         }
 
@@ -114,6 +119,7 @@ public class AppleIdentityProvider extends OIDCIdentityProvider implements Socia
                 @FormParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_CODE) String authorizationCode,
                 @FormParam("user") String userJson,
                 @FormParam(OAuth2Constants.ERROR) String error) {
+            logger.debugf("AppleIdentityProvider: %s, Got response: JSON: ##%s##, state: %s, authCode: %s", sessionDate, userJson, state, authorizationCode);
             AppleIdentityProvider.this.userJson = userJson;
             return super.authResponse(state, authorizationCode, error);
         }
