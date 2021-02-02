@@ -1,6 +1,7 @@
 package fr.benjaminfavre.provider;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider;
 import org.keycloak.broker.oidc.OIDCIdentityProvider;
@@ -15,14 +16,17 @@ import org.keycloak.crypto.ServerECDSASignatureSignerContext;
 import org.keycloak.crypto.SignatureSignerContext;
 import org.keycloak.events.EventBuilder;
 import org.keycloak.jose.jws.JWSBuilder;
-import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.RealmModel;
+import org.keycloak.models.*;
+import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.JsonWebToken;
+import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.util.JsonSerialization;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -129,5 +133,134 @@ public class AppleIdentityProvider extends OIDCIdentityProvider implements Socia
             public String firstName;
             public String lastName;
         }
+    }
+
+    // Overrided funs for debugging
+
+    @Override
+    protected Response exchangeStoredToken(UriInfo uriInfo, EventBuilder event, ClientModel authorizedClient, UserSessionModel tokenUserSession, UserModel tokenSubject) {
+        Response response = super.exchangeStoredToken(uriInfo, event, authorizedClient, tokenUserSession, tokenSubject);
+        logDebugText("exchangeStoredToken uriInfo", uriInfo);
+        logDebugText("exchangeStoredToken event", event);
+        logDebugText("exchangeStoredToken tokenUserSession", tokenUserSession);
+        logDebugText("exchangeStoredToken tokenSubject", tokenSubject);
+        logDebugText("exchangeStoredToken response", response);
+        return response;
+    }
+
+    @Override
+    protected void processAccessTokenResponse(BrokeredIdentityContext context, AccessTokenResponse response) {
+        logDebugText("processAccessTokenResponse context", context);
+        logDebugText("processAccessTokenResponse response", response);
+        super.processAccessTokenResponse(context, response);
+    }
+
+    @Override
+    protected Response exchangeSessionToken(UriInfo uriInfo, EventBuilder event, ClientModel authorizedClient, UserSessionModel tokenUserSession, UserModel tokenSubject) {
+        Response response = super.exchangeSessionToken(uriInfo, event, authorizedClient, tokenUserSession, tokenSubject);
+        logDebugText("exchangeSessionToken uriInfo", uriInfo);
+        logDebugText("exchangeSessionToken tokenUserSession", tokenUserSession);
+        logDebugText("exchangeSessionToken tokenSubject", tokenSubject);
+        logDebugText("exchangeSessionToken response", response);
+        return response;
+    }
+
+    @Override
+    protected BrokeredIdentityContext extractIdentity(AccessTokenResponse tokenResponse, String accessToken, JsonWebToken idToken) throws IOException {
+        BrokeredIdentityContext context = super.extractIdentity(tokenResponse, accessToken, idToken);
+        logDebugText("extractIdentity accessToken", accessToken);
+        logDebugText("extractIdentity idToken", idToken);
+        logDebugText("extractIdentity context", context);
+        return context;
+    }
+
+    @Override
+    public void authenticationFinished(AuthenticationSessionModel authSession, BrokeredIdentityContext context) {
+        logDebugText("authenticationFinished authSession", authSession);
+        logDebugText("authenticationFinished context", context);
+        super.authenticationFinished(authSession, context);
+    }
+
+    @Override
+    protected String getProfileEndpointForValidation(EventBuilder event) {
+        String validate = super.getProfileEndpointForValidation(event);
+        logDebugText("getProfileEndpointForValidation event", event);
+        logDebugText("getProfileEndpointForValidation validate", validate);
+        return validate;
+    }
+
+    @Override
+    public void preprocessFederatedIdentity(KeycloakSession session, RealmModel realm, BrokeredIdentityContext context) {
+        logDebugText("preprocessFederatedIdentity session", session);
+        logDebugText("preprocessFederatedIdentity realm", realm);
+        logDebugText("preprocessFederatedIdentity context", context);
+        super.preprocessFederatedIdentity(session, realm, context);
+    }
+
+    @Override
+    public Response exchangeFromToken(UriInfo uriInfo, EventBuilder event, ClientModel authorizedClient, UserSessionModel tokenUserSession, UserModel tokenSubject, MultivaluedMap<String, String> params) {
+        Response response = super.exchangeFromToken(uriInfo, event, authorizedClient, tokenUserSession, tokenSubject, params);
+        logDebugText("exchangeFromToken uriInfo", uriInfo);
+        logDebugText("exchangeFromToken tokenUserSession", tokenUserSession);
+        logDebugText("exchangeFromToken tokenSubject", tokenSubject);
+        logDebugText("exchangeFromToken event", event);
+        logDebugText("exchangeFromToken response", response);
+        return response;
+    }
+
+    @Override
+    public void importNewUser(KeycloakSession session, RealmModel realm, UserModel user, BrokeredIdentityContext context) {
+        logDebugText("importNewUser session", session);
+        logDebugText("importNewUser realm", realm);
+        logDebugText("importNewUser user", user);
+        logDebugText("importNewUser context", context);
+        super.importNewUser(session, realm, user, context);
+    }
+
+    @Override
+    protected Response exchangeErrorResponse(UriInfo uriInfo, ClientModel authorizedClient, UserSessionModel tokenUserSession, String errorCode, String reason) {
+        Response response = super.exchangeErrorResponse(uriInfo, authorizedClient, tokenUserSession, errorCode, reason);
+        logDebugText("exchangeErrorResponse uriInfo", uriInfo);
+        logDebugText("exchangeErrorResponse tokenUserSession", tokenUserSession);
+        logDebugText("exchangeErrorResponse errorCode", errorCode);
+        logDebugText("exchangeErrorResponse reason", reason);
+        logDebugText("exchangeErrorResponse response", response);
+        return response;
+    }
+
+    @Override
+    public void updateBrokeredUser(KeycloakSession session, RealmModel realm, UserModel user, BrokeredIdentityContext context) {
+        logDebugText("updateBrokeredUser session", session);
+        logDebugText("updateBrokeredUser realm", realm);
+        logDebugText("updateBrokeredUser user", user);
+        logDebugText("updateBrokeredUser context", context);
+        super.updateBrokeredUser(session, realm, user, context);
+    }
+
+    @Override
+    protected BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode userInfo) {
+        BrokeredIdentityContext identityContext = super.extractIdentityFromProfile(event, userInfo);
+        logDebugText("extractIdentityFromProfile userInfo", userInfo);
+        logDebugText("extractIdentityFromProfile Context", identityContext);
+        return identityContext;
+    }
+
+    @Override
+    protected BrokeredIdentityContext validateExternalTokenThroughUserInfo(EventBuilder event, String subjectToken, String subjectTokenType) {
+        BrokeredIdentityContext identityContext = super.validateExternalTokenThroughUserInfo(event, subjectToken, subjectTokenType);
+        logDebugText("validateExternalTokenThroughUserInfo Context", identityContext);
+        return identityContext;
+    }
+
+    @Override
+    protected BrokeredIdentityContext doGetFederatedIdentity(String accessToken) {
+        BrokeredIdentityContext identityContext = super.doGetFederatedIdentity(accessToken);
+        logDebugText("doGetFederatedIdentity Token", accessToken);
+        logDebugText("doGetFederatedIdentity Context", identityContext);
+        return identityContext;
+    }
+
+    private void logDebugText(String functionName, Object parameter) {
+        logger.debugf("AppleIdentityProvider: %s, " + functionName, parameter);
     }
 }
