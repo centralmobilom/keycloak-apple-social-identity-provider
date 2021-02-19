@@ -52,7 +52,8 @@ public class AppleIdentityProvider extends OIDCIdentityProvider implements Socia
     @Override
     public BrokeredIdentityContext getFederatedIdentity(String response) {
         BrokeredIdentityContext context = super.getFederatedIdentity(response);
-
+        logDebugText("getFederatedIdentity response", response);
+        logDebugText("getFederatedIdentity context", context);
         if (userJson != null) {
             try {
                 User user = JsonSerialization.readValue(userJson, User.class);
@@ -258,6 +259,27 @@ public class AppleIdentityProvider extends OIDCIdentityProvider implements Socia
         logDebugText("doGetFederatedIdentity Token", accessToken);
         logDebugText("doGetFederatedIdentity Context", identityContext);
         return identityContext;
+    }
+
+    @Override
+    protected JsonWebToken validateToken(String encodedToken) {
+        logDebugText("JsonWebToken", encodedToken);
+        JsonWebToken token = super.validateToken(encodedToken);
+
+        logDebugText("JsonWebToken:isActive", token.isActive());
+        logDebugText("JsonWebToken:isExpired", token.isExpired());
+        logDebugText("JsonWebToken:getOtherClaims", token.getOtherClaims());
+        return token;
+    }
+
+    @Override
+    protected JsonWebToken validateToken(String encodedToken, boolean ignoreAudience) {
+        logDebugText("JsonWebTokenWithIgnoreAudience", encodedToken);
+        JsonWebToken token = super.validateToken(encodedToken, ignoreAudience);
+        logDebugText("JsonWebTokenWithIgnoreAudience:isActive", token.isActive());
+        logDebugText("JsonWebTokenWithIgnoreAudience:isExpired", token.isExpired());
+        logDebugText("JsonWebTokenWithIgnoreAudience:getOtherClaims", token.getOtherClaims());
+        return token;
     }
 
     private void logDebugText(String functionName, Object parameter) {
